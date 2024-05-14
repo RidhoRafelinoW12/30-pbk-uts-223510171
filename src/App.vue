@@ -1,6 +1,6 @@
 <template>
   <div class="container">
-    <h1 class="heading">What I Want to Do Today!!!</h1>
+    <h1 class="heading">To Do List!!!</h1>
 
     <div class="input-section">
       <h2 class="section-title">Add List</h2>
