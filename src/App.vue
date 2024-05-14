@@ -8,57 +8,26 @@
     <button @click="showTodosSection" class="btn-todos-section">Todos</button>
 
     <!-- Bagian Post -->
-    <div v-if="showPost" class="input-section">
-      <h2 class="section-title">Post</h2>
-      <select v-model="selectedUser" class="select-user">
-        <option v-for="user in users" :key="user.id" :value="user.id">{{ user.name }}</option>
-      </select>
-      <button @click="post" class="btn-post">Post</button>
-    </div>
+    <Post v-if="showPost" :users="users" @fetch-posts="fetchPosts" :posts="posts"/>
 
     <!-- Bagian Todos -->
-    <div v-if="showTodos" class="input-section">
-      <h2 class="section-title">Add List</h2>
-      <div class="input-container">
-        <input type="text" v-model="namaKegiatan" placeholder="Apa Kegiatanmu hari ini!" class="input-kegiatan">
-        <button @click="tambahKegiatan" class="btn-tambah">Tambahkan</button>
-      </div>
-    </div>
-
-    <div class="list-section" v-if="showTodos">
-      <h2 class="section-title">Daftar Kegiatan</h2>
-      <ul>
-        <li v-for="(kegiatan, index) in filteredKegiatanList" :key="index" class="daftar-kegiatan">
-          <div class="kegiatan-info">
-            <span class="span" :style="{ textDecoration: kegiatan.selesai ? 'line-through' : 'none' }">{{ kegiatan.nama }}</span>
-            <button @click="batalkanKegiatan(index)" class="btn-batalkan">Batalkan</button>
-          </div>
-          <input type="checkbox" v-model="kegiatan.selesai" class="checkbox-selesai">
-        </li>
-      </ul>
-      <button @click="toggleFilter" class="btn-filter" :class="{ active: filterAktif }">Check List !!</button>
-    </div>
-
-    <!-- Bagian Daftar Postingan -->
-    <div v-if="showPost" class="list-section">
-      <h2 class="section-title">Daftar Postingan</h2>
-      <ul>
-        <li v-for="(post, index) in posts" :key="index" class="daftar-post">
-          <span>{{ post.title }}</span>
-        </li>
-      </ul>
-    </div>
+    <Todos v-if="showTodos" :kegiatanList="kegiatanList" :filterAktif="filterAktif" @tambah-kegiatan="tambahKegiatan" @batalkan-kegiatan="batalkanKegiatan" @toggle-filter="toggleFilter"/>
   </div>
 </template>
 
 <script>
+import Post from './components/Post.vue';
+import Todos from './components/Todos.vue';
+
 export default {
+  components: {
+    Post,
+    Todos,
+  },
   data() {
     return {
-      namaKegiatan: '',
       kegiatanList: [],
       filterAktif: false,
-      selectedUser: null,
       posts: [],
       users: [],
       showPost: false, // Menyimpan status tampilan bagian Post
@@ -71,20 +40,10 @@ export default {
       .then(response => response.json())
       .then(data => (this.users = data));
   },
-  computed: {
-    filteredKegiatanList() {
-      if (this.filterAktif) {
-        return this.kegiatanList.filter(kegiatan => !kegiatan.selesai);
-      } else {
-        return this.kegiatanList;
-      }
-    }
-  },
   methods: {
-    tambahKegiatan() {
-      if (this.namaKegiatan.trim() !== '') {
-        this.kegiatanList.push({ nama: this.namaKegiatan, selesai: false });
-        this.namaKegiatan = '';
+    tambahKegiatan(namaKegiatan) {
+      if (namaKegiatan.trim() !== '') {
+        this.kegiatanList.push({ nama: namaKegiatan, selesai: false });
       }
     },
     batalkanKegiatan(index) {
@@ -101,9 +60,9 @@ export default {
       this.showPost = false;
       this.showTodos = true;
     },
-    post() {
-      if (this.selectedUser !== null) {
-        fetch(`https://jsonplaceholder.typicode.com/posts?userId=${this.selectedUser}`)
+    fetchPosts(selectedUser) {
+      if (selectedUser !== null) {
+        fetch(`https://jsonplaceholder.typicode.com/posts?userId=${selectedUser}`)
           .then(response => response.json())
           .then(data => (this.posts = data));
       }
