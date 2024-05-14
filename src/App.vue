@@ -1,8 +1,23 @@
 <template>
   <div class="container">
-    <h1 class="heading">To Do List!!!</h1>
+    <h1 class="heading">What I Want to Do Today!!!</h1>
 
-    <div class="input-section">
+    <!-- Tombol Post -->
+    <button @click="showPostSection" class="btn-post-section">Post</button>
+    <!-- Tombol Todos -->
+    <button @click="showTodosSection" class="btn-todos-section">Todos</button>
+
+    <!-- Bagian Post -->
+    <div v-if="showPost" class="input-section">
+      <h2 class="section-title">Post</h2>
+      <select v-model="selectedUser" class="select-user">
+        <option v-for="user in users" :key="user.id" :value="user.id">{{ user.name }}</option>
+      </select>
+      <button @click="post" class="btn-post">Post</button>
+    </div>
+
+    <!-- Bagian Todos -->
+    <div v-if="showTodos" class="input-section">
       <h2 class="section-title">Add List</h2>
       <div class="input-container">
         <input type="text" v-model="namaKegiatan" placeholder="Apa Kegiatanmu hari ini!" class="input-kegiatan">
@@ -10,7 +25,7 @@
       </div>
     </div>
 
-    <div class="list-section">
+    <div class="list-section" v-if="showTodos">
       <h2 class="section-title">Daftar Kegiatan</h2>
       <ul>
         <li v-for="(kegiatan, index) in filteredKegiatanList" :key="index" class="daftar-kegiatan">
@@ -23,102 +38,18 @@
       </ul>
       <button @click="toggleFilter" class="btn-filter" :class="{ active: filterAktif }">Check List !!</button>
     </div>
+
+    <!-- Bagian Daftar Postingan -->
+    <div v-if="showPost" class="list-section">
+      <h2 class="section-title">Daftar Postingan</h2>
+      <ul>
+        <li v-for="(post, index) in posts" :key="index" class="daftar-post">
+          <span>{{ post.title }}</span>
+        </li>
+      </ul>
+    </div>
   </div>
 </template>
-
-<style scoped>
-.container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 100vh;
-  padding: 20px;
-  background-image: url('foto1.JPEG');
-  background-size: cover;
-  background-position: center;
-  background-repeat: fixed;
-}
-
-
-.heading {
-  font-size: 32px;
-  font-weight: bold;
-  margin-bottom: 20px;
-  color: #333333;
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
-}
-
-.section-title {
-  font-size: 24px;
-  margin-bottom: 10px;
-}
-
-.input-container {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-}
-
-.input-kegiatan {
-  flex: 1;
-  padding: 10px;
-  border-radius: 100px; /* Agar input lebih bulat */
-  border: 1px solid #ced4da;
-}
-
-.btn-tambah {
-  background-color: #00ff00;
-  color: white;
-  border: none;
-  padding: 5px 16px;
-  border-radius: 10px;
-  cursor: pointer;
-}
-
-.list-section {
-  margin-top: 20px;
-  width: 100%; /* Agar lebar list-section mengisi penuh container */
-}
-
-.daftar-kegiatan {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px;
-  background-color: #ffffff;
-  border-radius: 4px;
-  box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
-  margin-bottom: 10px;
-}
-
-.kegiatan-info {
-  display: flex;
-  align-items: center;
-}
-
-.span {
-  color: #000000;
-  margin-right: 10px;
-}
-
-.btn-batalkan, .btn-filter {
-  background-color: #dc3545;
-  color: white;
-  border: none;
-  padding: 4px 8px;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.checkbox-selesai {
-  margin-left: 10px;
-}
-
-.btn-filter.active {
-  background-color: #28a745;
-}
-</style>
 
 <script>
 export default {
@@ -127,7 +58,18 @@ export default {
       namaKegiatan: '',
       kegiatanList: [],
       filterAktif: false,
+      selectedUser: null,
+      posts: [],
+      users: [],
+      showPost: false, // Menyimpan status tampilan bagian Post
+      showTodos: true, // Menyimpan status tampilan bagian Todos (default ditampilkan saat halaman pertama dimuat)
     };
+  },
+  mounted() {
+    // Load users from API
+    fetch('https://jsonplaceholder.typicode.com/users')
+      .then(response => response.json())
+      .then(data => (this.users = data));
   },
   computed: {
     filteredKegiatanList() {
@@ -151,6 +93,106 @@ export default {
     toggleFilter() {
       this.filterAktif = !this.filterAktif;
     },
+    showPostSection() {
+      this.showPost = true;
+      this.showTodos = false;
+    },
+    showTodosSection() {
+      this.showPost = false;
+      this.showTodos = true;
+    },
+    post() {
+      if (this.selectedUser !== null) {
+        fetch(`https://jsonplaceholder.typicode.com/posts?userId=${this.selectedUser}`)
+          .then(response => response.json())
+          .then(data => (this.posts = data));
+      }
+    },
   },
 };
 </script>
+
+<style scoped>
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.heading {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.btn-post-section,
+.btn-todos-section {
+  display: inline-block;
+  margin-right: 10px;
+  padding: 8px 16px;
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.input-section {
+  margin-bottom: 20px;
+}
+
+.section-title {
+  margin-bottom: 10px;
+}
+
+.input-container {
+  display: flex;
+  margin-bottom: 10px;
+}
+
+.input-kegiatan {
+  flex: 1;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  margin-right: 10px;
+}
+
+.btn-tambah,
+.btn-post,
+.btn-batalkan,
+.btn-filter {
+  padding: 8px 16px;
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-right: 10px;
+}
+
+.list-section {
+  margin-bottom: 20px;
+}
+
+.daftar-kegiatan {
+  display: flex;
+  align-items: center;
+  margin-bottom: 5px;
+}
+
+.kegiatan-info {
+  flex: 1;
+}
+
+.checkbox-selesai {
+  margin-right: 10px;
+}
+
+.daftar-post {
+  margin-bottom: 5px;
+}
+
+.active {
+  background-color: #0056b3;
+}
+</style>
